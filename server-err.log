@@ -1,0 +1,19 @@
+Gemini text request failed, falling back to OpenRouter: Error: Gemini request failed: 503 {
+  "error": {
+    "code": 503,
+    "message": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+    "status": "UNAVAILABLE"
+  }
+}
+
+    at callGemini (C:\Users\LENOVO\OneDrive\Desktop\XbalanQue\server\index.js:94:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async callTextModel (C:\Users\LENOVO\OneDrive\Desktop\XbalanQue\server\index.js:116:14)
+    at async solveQuestion (C:\Users\LENOVO\OneDrive\Desktop\XbalanQue\server\index.js:207:10)
+    at async Socket.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\XbalanQue\server\index.js:715:22)
+Primary OpenRouter model failed, retrying with free router: Error: OpenRouter request failed: 429 {"error":{"message":"Provider returned error","code":429,"metadata":{"raw":"google/gemma-4-26b-a4b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations","provider_name":"Google AI Studio","is_byok":false}},"user_id":"user_3AhkkMdAlzFCcrGJTaFjQydod54"}
+    at callOpenRouter (C:\Users\LENOVO\OneDrive\Desktop\XbalanQue\server\index.js:54:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async callTextModel (C:\Users\LENOVO\OneDrive\Desktop\XbalanQue\server\index.js:125:12)
+    at async solveQuestion (C:\Users\LENOVO\OneDrive\Desktop\XbalanQue\server\index.js:207:10)
+    at async Socket.<anonymous> (C:\Users\LENOVO\OneDrive\Desktop\XbalanQue\server\index.js:715:22)

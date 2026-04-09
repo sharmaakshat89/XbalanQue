@@ -1,0 +1,328 @@
+Below is a complete 10-phase plan from absolute scratch, ending with your receiver-triggered image + 40–50 sec audio system. Each phase has a single Codex-ready prompt. Follow sequentially.
+
+⸻
+
+🚀 PHASE 1 — Create MERN base
+
+Codex prompt:
+
+Create a MERN stack project.
+
+Backend:
+- Node.js + Express server (port 5000)
+- Route GET /api/health returns "OK"
+
+Frontend:
+- React app (Vite or CRA)
+- Axios installed
+- Test API call to /api/health and display result
+
+Project structure:
+- /server
+- /client
+
+
+⸻
+
+🚀 PHASE 2 — Basic login (hardcoded users)
+
+Codex prompt:
+
+Add login system with hardcoded credentials.
+
+Backend:
+- POST /api/login
+- Users:
+  rec / 1234 → role: receiver
+  tra / 5678 → role: transmitter
+- Return JWT token with role
+
+Frontend:
+- Login page
+- Store token in localStorage
+- Redirect:
+  receiver → /receiver
+  transmitter → /transmitter
+
+
+⸻
+
+🚀 PHASE 3 — Protected routes
+
+Use:
+	•	jsonwebtoken
+
+Codex prompt:
+
+Implement protected routes using JWT.
+
+Backend:
+- Middleware to verify token
+- Attach role to request
+
+Frontend:
+- Protect routes:
+  /receiver (receiver only)
+  /transmitter (transmitter only)
+- Redirect unauthorized users to login
+
+
+⸻
+
+🚀 PHASE 4 — Socket connection setup
+
+Use:
+	•	socket.io
+
+Codex prompt:
+
+Integrate socket.io.
+
+Backend:
+- Attach socket.io to Express server
+- Log connections
+
+Frontend:
+- Connect to socket server
+- Keep socket instance globally
+
+Ensure multiple devices can connect.
+
+
+⸻
+
+🚀 PHASE 5 — Register roles in socket
+
+Codex prompt:
+
+Add role registration in socket.
+
+Backend:
+- On connection, listen for "register_role"
+- Store mapping of socket.id → role
+
+Frontend:
+- After login, emit:
+  socket.emit("register_role", { role })
+
+Ensure backend can identify receiver and transmitter sockets.
+
+
+⸻
+
+🚀 PHASE 6 — Receiver UI (trigger buttons)
+
+Use:
+	•	Tailwind CSS
+
+Codex prompt:
+
+Create receiver dashboard.
+
+UI:
+- Two buttons:
+  1. Capture Image
+  2. Record Audio (50s)
+- Mobile-first layout
+- Large touch-friendly buttons
+- Status text (idle, processing)
+
+No backend calls yet.
+
+
+⸻
+
+🚀 PHASE 7 — Trigger events (receiver → backend → transmitter)
+
+Codex prompt:
+
+Implement trigger flow using socket.io.
+
+Frontend (Receiver):
+- On button clicks:
+  socket.emit("trigger_capture")
+  socket.emit("trigger_audio")
+
+Backend:
+- On trigger events:
+  forward to transmitter:
+    emit "do_capture"
+    emit "do_audio"
+
+Ensure only transmitter receives events.
+
+
+⸻
+
+🚀 PHASE 8 — Transmitter capture (image + 50s audio)
+
+Use:
+	•	react-webcam
+	•	react-mic
+
+Codex prompt:
+
+Implement capture on transmitter.
+
+Image:
+- Listen for "do_capture"
+- Capture image using react-webcam
+- Convert to base64
+- Send to backend
+
+Audio:
+- Listen for "do_audio"
+- Start recording using react-mic
+- Record for 45–50 seconds using setTimeout
+- Send audio file to backend
+
+Show status:
+- Capturing
+- Recording
+- Processing
+
+
+⸻
+
+🚀 PHASE 9 — Backend processing (OCR + speech-to-text)
+
+Use:
+	•	multer
+	•	sharp
+	•	tesseract.js
+
+Codex prompt:
+
+Create backend processing routes.
+
+POST /api/upload:
+- Receive image via multer
+- Process with sharp:
+  grayscale, normalize, sharpen
+- Run OCR with tesseract.js
+- Return extracted text
+
+POST /api/audio:
+- Receive audio file
+- Convert speech to text (use placeholder or simple library)
+- Return text
+
+
+⸻
+
+🚀 PHASE 10 — AI + result delivery
+
+Use:
+	•	OpenAI
+
+Codex prompt:
+
+Add AI processing and send results via socket.
+
+Backend:
+- Function 1: extract clean question from text
+- Function 2: solve question
+
+After processing:
+- Emit "result" event:
+  { question, answer }
+
+Frontend (Receiver):
+- Listen for "result"
+- Display clearly (mobile-friendly)
+
+Add:
+- loading state
+- replace old result with new one
+
+
+⸻
+
+⚠️ Add these constraints after everything works
+
+// cooldown
+ignore clicks for 2 seconds
+
+// prevent overlap
+if (processing) return;
+
+// audio limit
+max 50 seconds only
+
+
+⸻
+
+🧠 What you end up with
+	•	login-based dual-device system
+	•	receiver-controlled triggering
+	•	image + long audio input
+	•	OCR + AI solving
+	•	real-time display
+
+⸻
+
+If you want next:
+	•	full backend code (copy-paste ready)
+	•	or exact OpenAI prompts for highest accuracy (this is where quality jumps significantly)
+
+
+
+
+
+
+
+
+
+    For Image OCR Refinement
+When Tesseract.js finishes, the text is often messy (e.g., "Wh4t is 2+2?"). Send this to the AI:
+
+Prompt: "The following text is raw OCR output from a camera image. Clean up the typos, identify the core question, and ignore any background noise text. Return only the sanitized question. Text: [INSERT_OCR_DATA]"
+
+For the "Solver" Logic (Phase 10)
+To get the highest accuracy for the Receiver, use a Chain-of-Thought prompt:
+
+Prompt: "You are a professional tutor. Analyze the following question: [INSERT_CLEANED_TEXT].
+
+Briefly explain the concept.
+
+Solve it step-by-step.
+
+Provide the final answer in bold.
+Keep the total response under 150 words for mobile readability."
+
+🛠️ Performance Optimization Tips
+To ensure Phase 8 and Phase 9 don't crash your server:
+
+Image Pre-processing: In Phase 9, when using sharp, use this specific sequence for the highest OCR accuracy:
+
+JavaScript
+sharp(inputBuffer)
+  .grayscale()
+  .linear(1.5, 0) // Increase contrast
+  .resize(2000)   // Upscale if the image is small
+  .toBuffer();
+Audio Format: Ensure react-mic is saving as MP3 or WAV. If you send a .webm (default in many browsers) to an AI that expects .mp3, it will fail. Use ffmpeg on the backend if necessary.
+
+Socket Heartbeats: Since the audio recording takes 50 seconds, the socket connection might idle out. Ensure your Socket.io config has pingTimeout: 60000 to keep the connection alive during the long recording.
+
+A Note on "Highest Accuracy"
+For the Transmitter (Phase 8), use facingMode: "environment" in react-webcam. This forces the phone to use the back camera (higher resolution/autofocus) instead of the selfie camera, which is critical for readable OCR.
+
+
+
+
+
+
+
+
+
+Using the Browser's "Web Speech API" (Free)
+Most modern browsers (Chrome/Edge) have a built-in feature that converts speech to text for free. You could "turn on" this feature in the Transmitter's browser code.
+
+How it works: As the Transmitter "hears" the 50 seconds of audio, the browser generates a live transcript. When the 50 seconds are up, you send the text string to the backend instead of a heavy audio file.
+
+The Code (npm library): react-speech-recognition.
+
+The Pros: It is 100% free and uses no API keys.
+
+The Cons: It only works while the browser tab is active/awake. If the Transmitter's phone screen turns off, the "captions" stop immediately.
