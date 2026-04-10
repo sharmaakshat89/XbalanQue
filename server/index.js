@@ -125,7 +125,7 @@ async function callTextModel(prompt) {
     }
   }
 
-  const preferredModel = IMAGE_MODEL || OPENROUTER_FALLBACK_MODEL;
+  const preferredModel = process.env.TEXT_MODEL || OPENROUTER_FALLBACK_MODEL;
 
   try {
     return await callOpenRouter([{ role: 'user', content: prompt }], preferredModel);
@@ -194,16 +194,149 @@ function detectQuestionType(question) {
 }
 
 function buildCodingPrompt(question) {
-  return `You are a senior software engineer helping with a coding or debugging problem.\n\nQuestion: ${question}\n\nRequirements:\n- Solve the problem in JavaScript unless the question explicitly demands another language.\n- If this is a debugging question, first identify the root cause clearly and then show the corrected solution.\n- Return a compact explanation first.\n- Then provide a code block.\n- After every meaningful line of code, add an inline comment that explains why that line exists.\n- Keep the explanation sharp, practical, and impressive.\n- End with a short complexity note when relevant.`;
+  return `/*
+You are a senior software engineer helping with a coding or debugging problem.
+
+Question:
+${question}
+
+
+Response Format (STRICT — follow exactly):
+
+1. Explanation
+- Write a clear, concise explanation of the approach.
+- Keep it readable (2–4 short paragraphs max).
+- Do NOT compress everything into one paragraph.
+- Use spacing between paragraphs.
+
+2. Code
+- Provide the solution inside a proper fenced code block using triple backticks.
+- Use the correct language tag (e.g., \`\`\`javascript).
+- Preserve clean indentation and spacing exactly like production-quality code.
+- Each statement should be on its own line.
+- Avoid long horizontal lines.
+
+- For comments:
+  - Prefer line-by-line comments ABOVE the code line (not inline at the end).
+  - Keep comments short and readable.
+  
+Example style:
+
+\`\`\`javascript
+// Explain what this line does
+const x = 10;
+
+// Explain next step
+function test() {
+  return x;
 }
+\`\`\`
+
+3. Complexity
+- Add a short section at the end:
+Time Complexity: ...
+Space Complexity: ...
+
+
+Formatting Rules (VERY IMPORTANT):
+- Always use proper markdown.
+- Always use fenced code blocks (no plain text code).
+- Always leave a blank line between sections.
+- Do NOT collapse spacing.
+- Do NOT write everything in one paragraph.
+- Output should look clean and well-spaced, like in VS Code.
+
+Tone:
+- Keep it sharp, practical, and technically strong.
+*/`
+}
+
 
 function buildAcademicPrompt(question, sourceMode) {
   if (sourceMode === 'audio') {
-    return `You are answering this in a high-level interview as a polished human candidate.\n\nQuestion: ${question}\n\nRequirements:\n- Use a conversational but sharp tone, like a strong candidate speaking to an interviewer.\n- Explain deeply but concisely.\n- Show judgment, structure, and business maturity.\n- Include one or two thoughtful insights that would impress an interviewer beyond the textbook answer.\n- Avoid sounding robotic or overly scripted.\n- Keep the response under 450 words.`;
+    return `/*
+You are answering this in a high-level interview as a polished human candidate.
+
+Question:
+${question}
+
+
+Response Structure (STRICT):
+
+1. Direct Answer
+- Start with a clear, confident answer in 2–3 lines.
+
+2. Explanation
+- Break into 2–4 short paragraphs.
+- Each paragraph should focus on one idea.
+- Maintain spacing between paragraphs.
+
+3. Insight
+- Add 1–2 thoughtful insights, trade-offs, or real-world implications.
+- This should feel like something beyond a textbook answer.
+
+4. Closing (optional)
+- A short concluding line if it adds clarity.
+
+
+Formatting Rules (CRITICAL):
+- Do NOT write everything in one block.
+- Use proper paragraph spacing.
+- Keep sentences readable (avoid overly long lines).
+- Maintain a natural speaking flow, but visually structured.
+
+Constraints:
+- Keep under 450 words.
+- Avoid robotic phrasing.
+- Avoid over-compression.
+
+
+Goal:
+- The answer should read like a strong candidate speaking clearly,
+  while also looking clean and well-structured on screen.
+*/`;
   }
 
-  return `You are a top-tier tutor answering an academic or factual question.\n\nQuestion: ${question}\n\nRequirements:\n- Give an impressive, polished answer.\n- Explain the core concept clearly.\n- Structure the reasoning logically.\n- Include one strong insight, nuance, or real-world implication that elevates the answer.\n- Keep it concise but authoritative.\n- Keep the response under 450 words.`;
+  return `/*
+You are a top-tier tutor answering an academic or factual question.
+
+Question:
+${question}
+
+
+Response Structure (STRICT):
+
+1. Core Answer
+- Start with a clear definition or direct answer.
+
+2. Explanation
+- Break into 2–4 short paragraphs.
+- Each paragraph should explain one part of the concept.
+- Use spacing between paragraphs.
+
+3. Insight / Nuance
+- Add one strong insight, edge case, or real-world implication.
+
+4. Optional Example
+- Include a short example if it improves clarity.
+
+
+Formatting Rules (CRITICAL):
+- Do NOT compress into a single paragraph.
+- Use proper paragraph breaks.
+- Keep the structure clean and readable.
+- Avoid dense, wall-of-text responses.
+
+Constraints:
+- Keep under 450 words.
+- Be concise but not visually cramped.
+
+
+Goal:
+- The answer should feel authoritative, structured, and easy to read.
+*/`;
 }
+
 
 async function solveQuestion(question, sourceMode = 'image') {
   const questionType = detectQuestionType(question);
@@ -719,7 +852,7 @@ io.on('connection', (socket) => {
         stage: 'ai'
       });
 
-      const cleanQuestion = await extractCleanQuestion(text);
+      const cleanQuestion = text; // Bypass cleaning
       const answer = await solveQuestion(cleanQuestion, requestEntry.mode);
 
       emitRequestState(requestEntry.receiverSocketId, 'result', {

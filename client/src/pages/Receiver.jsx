@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { Camera, Mic, Loader2, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
@@ -163,7 +164,9 @@ function Receiver() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Answer</p>
-                <p className="font-semibold text-lg">{result.answer}</p>
+                <div className="prose dark:prose-invert">
+                  <ReactMarkdown>{result.answer}</ReactMarkdown>
+                </div>
               </div>
             </CardContent>
           </Card>
